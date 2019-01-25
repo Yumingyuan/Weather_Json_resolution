@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -37,10 +38,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     String base_url="http://t.weather.sojson.com/api/weather/city/";//http访问基础页面
     Spinner city_spinner;
     Button check_button;
+    TextView text1_aqi;//AQI
+    TextView text2_maxtemp;//Max temperature
+    TextView text3_mintemp;//Min temperature
+    String aqi_info=null;
+    String min_temp=null;
+    String max_temp=null;
     private List<String> city_list=new ArrayList<String>();//城市列表
     private Map<String,String> city_id_dict=new HashMap<String,String>();
     @Override
@@ -76,6 +83,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     }
                     net_request_Handler.obtainMessage(1,response).sendToTarget();
                 }
+                else
+                {
+                    net_request_Handler.obtainMessage(2).sendToTarget();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -85,6 +96,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
     {
         this.city_spinner=(Spinner) findViewById(R.id.city_spinner);
         this.check_button=findViewById(R.id.check_button);
+        this.text1_aqi=findViewById(R.id.text1);
+        this.text2_maxtemp=findViewById(R.id.text2);
+        this.text3_mintemp=findViewById(R.id.text3);
+        //初始化获得Textview中字符串信息
+        aqi_info= (String) this.text1_aqi.getText();
+        max_temp= (String) this.text2_maxtemp.getText();
+        min_temp= (String) this.text3_mintemp.getText();
         this.city_list.add("北京");
         this.city_list.add("西安");
         this.city_list.add("上海");
@@ -116,6 +134,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     String data= (String) msg.obj;
                     Handle_JSON(data);//对JSON数据进行解析
                     break;
+                case 2:
+                    Toast.makeText(MainActivity.this.getApplicationContext(),"Network Error!",Toast.LENGTH_SHORT).show();
             }
             Bundle data = msg.getData();
             String val = data.getString("value");
@@ -139,10 +159,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
             String data = jsonObjectALL.optString("data");
             JSONObject dataJSONObject = new JSONObject(data);
             JSONArray json_arr=dataJSONObject.getJSONArray("forecast");//forecast对应于一个json数组，把他拿到
-            toastinfo+="空气质量:"+json_arr.getJSONObject(0).get("aqi")+"\n";
-            toastinfo+="最高气温:"+json_arr.getJSONObject(0).get("high")+"\n";
-            toastinfo+="最低气温:"+json_arr.getJSONObject(0).get("low");
-            Toast.makeText(this,toastinfo,Toast.LENGTH_LONG).show();
+            this.text1_aqi.setText(aqi_info+""+json_arr.getJSONObject(0).get("aqi"));
+            this.text2_maxtemp.setText(max_temp+""+json_arr.getJSONObject(0).get("high"));
+            this.text3_mintemp.setText(min_temp+""+json_arr.getJSONObject(0).get("low"));
+            //toastinfo+="空气质量:"+json_arr.getJSONObject(0).get("aqi")+"\n";
+            //toastinfo+="最高气温:"+json_arr.getJSONObject(0).get("high")+"\n";
+            //toastinfo+="最低气温:"+json_arr.getJSONObject(0).get("low");
+            //Toast.makeText(this,toastinfo,Toast.LENGTH_LONG).show();
         } catch (JSONException e) {
             e.printStackTrace();
         }
